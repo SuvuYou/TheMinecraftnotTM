@@ -5,12 +5,12 @@ using UnityEngine;
 public class World : MonoBehaviour
 {
     [SerializeField] private ChunkRenderer _chunkRendererPrefab;
-    [SerializeField] private float _noiseScale = 0.03f;
+    [SerializeField] private TerrainGenerator _terrainGenerator;
 
     private int _worldSizeInChunks = 16;
+    public static int SeaLevel = 6;
     public static int ChunkSize = 16;
     public static int ChunkHeight = 100;
-    private int _seaLevel = 50;
 
     private Dictionary<Vector3Int, ChunkData> _chunks = new();
     private Dictionary<Vector3Int, ChunkRenderer> _chunkRenderers = new();
@@ -31,7 +31,7 @@ public class World : MonoBehaviour
             {
                 var newChunk = new ChunkData(ChunkSize, ChunkHeight, new Vector3Int(x * ChunkSize, 0, z * ChunkSize), this);
                 _chunks.Add(newChunk.WorldPosition, newChunk);
-                Chunk.GenerateVoxels(newChunk, _noiseScale, _seaLevel);
+                _terrainGenerator.GenerateVoxels(newChunk);
             }
         }
 

@@ -45,43 +45,6 @@ public static class Chunk
         
         return meshData;
     }
-    
-    public static void GenerateVoxels(ChunkData chunk, float noiseScale, int seaLevel)
-    {
-        for (int x = 0; x < chunk.ChunkSize; x++)
-        {
-            for (int z = 0; z < chunk.ChunkSize; z++)
-            {
-                var noiseValue = Mathf.PerlinNoise((chunk.WorldPosition.x + x) * noiseScale, (chunk.WorldPosition.z + z) * noiseScale);
-                var groundLevel = Mathf.RoundToInt(noiseValue * chunk.ChunkHeight);
-     
-                for (int y = 0; y < chunk.ChunkHeight; y++)
-                {
-                    var blockPosition = new Vector3Int(x, y, z);
-                    var voxelType = BlockType.Grass_Dirt;
-                    
-                    if (y < groundLevel)
-                    {
-                        voxelType = BlockType.Dirt;
-                    }
-                    else if (y > groundLevel)
-                    {
-                        
-                        if (y < seaLevel)
-                        {
-                            voxelType = BlockType.Water;
-                        }
-                        else
-                        {
-                            voxelType = BlockType.Air;
-                        }   
-                    }
-
-                    Chunk.SetBlock(chunk, blockPosition, voxelType);
-                }
-            }
-        }
-    }
 
     private static Vector3Int GetWorldBlockPosition(ChunkData chunk, Vector3Int chunkPosition)
     {
