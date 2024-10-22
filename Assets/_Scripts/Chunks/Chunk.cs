@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class Chunk
@@ -37,6 +38,37 @@ public static class Chunk
         return BlockType.Nothing;
     }
 
+    public static List<Vector3Int> GetNeighbouringChunkPositions(ChunkData chunk, Vector3Int blockLocalPosition)
+    {
+        var neighbours = new List<Vector3Int>();
+
+        if (blockLocalPosition.x == 0) neighbours.Add(Vector3Int.left);
+        if (blockLocalPosition.x == WorldData.ChunkSize - 1) neighbours.Add(Vector3Int.right);  
+        if (blockLocalPosition.z == 0) neighbours.Add(Vector3Int.back);
+        if (blockLocalPosition.z == WorldData.ChunkSize - 1) neighbours.Add(Vector3Int.forward);
+
+        for(int i = 0; i < neighbours.Count; i++) 
+        {
+            neighbours[i] = chunk.WorldPosition + neighbours[i] * WorldData.ChunkSize;
+        }
+
+        return neighbours;
+    }
+
+    public static Vector3Int GetBlockPositionFromSurfacePoint(Vector3 surfacePoint, Vector3 normal)
+    {
+        if (normal.x == 1) surfacePoint.x -= 0.5f;
+        if (normal.x == -1) surfacePoint.x += 0.5f;
+
+        if (normal.y == 1 ) surfacePoint.y -= 0.5f;
+        if (normal.y == -1) surfacePoint.y += 0.5f;
+
+        if (normal.z == 1) surfacePoint.z -= 0.5f;
+        if (normal.z == -1) surfacePoint.z += 0.5f;
+
+        return  Vector3Int.RoundToInt(surfacePoint);
+    }
+
     public static MeshData GetChunkMeshData(ChunkData chunk) 
     {
         var meshData = new MeshData();
@@ -46,7 +78,7 @@ public static class Chunk
         return meshData;
     }
 
-    private static Vector3Int GetWorldBlockPosition(ChunkData chunk, Vector3Int chunkPosition)
+    public static Vector3Int GetWorldBlockPosition(ChunkData chunk, Vector3Int chunkPosition)
     {
         return new Vector3Int()
         {
@@ -56,7 +88,7 @@ public static class Chunk
         };
     }
 
-    private static Vector3Int GetLocalBlockPosition(ChunkData chunk, Vector3Int worldPosition)
+    public static Vector3Int GetLocalBlockPosition(ChunkData chunk, Vector3Int worldPosition)
     {
         return new Vector3Int()
         {
@@ -88,9 +120,9 @@ public static class Chunk
     {
         return new ()
         {
-            x = Mathf.FloorToInt(worldBlockPosition.x / (float)World.ChunkSize) * World.ChunkSize,
-            y = Mathf.FloorToInt(worldBlockPosition.y / (float)World.ChunkHeight) * World.ChunkHeight,
-            z = Mathf.FloorToInt(worldBlockPosition.z / (float)World.ChunkSize) * World.ChunkSize
+            x = Mathf.FloorToInt(worldBlockPosition.x / (float)WorldData.ChunkSize) * WorldData.ChunkSize,
+            y = Mathf.FloorToInt(worldBlockPosition.y / (float)WorldData.ChunkHeight) * WorldData.ChunkHeight,
+            z = Mathf.FloorToInt(worldBlockPosition.z / (float)WorldData.ChunkSize) * WorldData.ChunkSize
         };
     }
 
@@ -102,6 +134,14 @@ public static class Chunk
     private static bool IsInRange(int coordinat, int maxCoordinate)
     {
         return coordinat >= 0 && coordinat < maxCoordinate;
+    }
+
+    public static bool IsBlockOnChunkEdge(Vector3Int blockLocalCoordinats)
+    {
+        return blockLocalCoordinats.x == 0 || 
+                blockLocalCoordinats.x == WorldData.ChunkSize - 1 || 
+                blockLocalCoordinats.z == 0 || 
+                blockLocalCoordinats.z == WorldData.ChunkSize - 1;
     }
 
 }

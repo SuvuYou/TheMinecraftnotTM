@@ -1,4 +1,4 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,48 +7,50 @@ public class World : MonoBehaviour
     [SerializeField] private ChunkRenderer _chunkRendererPrefab;
     [SerializeField] private TerrainGenerator _terrainGenerator;
 
-    private int _worldSizeInChunks = 16;
-    public static int SeaLevel = 6;
-    public static int ChunkSize = 16;
-    public static int ChunkHeight = 100;
-
     private Dictionary<Vector3Int, ChunkData> _chunks = new();
     private Dictionary<Vector3Int, ChunkRenderer> _chunkRenderers = new();
 
+    public event Action OnWorldGenerated;
+
     public void GenerateWorld()
     {
-        foreach(var renderer in _chunkRenderers.Values)
-        {
-            Destroy(renderer.gameObject);
-        }
+        _generateWorld(Vector3Int.zero);
+        OnWorldGenerated?.Invoke();
+    }
 
-        _chunks.Clear();
-        _chunkRenderers.Clear();
+    private void _generateWorld(Vector3Int centerPosition)
+    {
+        var chunksGenerationData = WorldData.GetChunksToGenerate(centerPosition, _chunkRenderers, _chunks);
 
-        for (int x = 0; x < _worldSizeInChunks; x++)
+        foreach(var chunkPosition in chunksGenerationData.ChunkRendererPositionsToRemove)
         {
-            for (int z = 0; z < _worldSizeInChunks; z++)
+            if (_chunkRenderers.ContainsKey(chunkPosition))
             {
-                var newChunk = new ChunkData(ChunkSize, ChunkHeight, new Vector3Int(x * ChunkSize, 0, z * ChunkSize), this);
-                _chunks.Add(newChunk.WorldPosition, newChunk);
-                _terrainGenerator.GenerateVoxels(newChunk);
+                _chunkRenderers[chunkPosition].gameObject.SetActive(false);
+                _chunkRenderers.Remove(chunkPosition);
             }
         }
 
-        foreach(var chunk in _chunks.Values)
+        foreach(var chunkPosition in chunksGenerationData.ChunkDataPositionsToGenerate)
         {
+            var chunk = new ChunkData(WorldData.ChunkSize, WorldData.ChunkHeight, chunkPosition, this);
+            _chunks.Add(chunkPosition, chunk);
+            _terrainGenerator.GenerateVoxels(chunk);
+        }
+
+        foreach(var chunkPosition in chunksGenerationData.ChunkRendererPositionsToGenerate)
+        {
+            var chunk = _chunks[chunkPosition];
             var meshData = Chunk.GetChunkMeshData(chunk);
-            
             var chunkRenderer = Instantiate(_chunkRendererPrefab, chunk.WorldPosition, Quaternion.identity);
             _chunkRenderers.Add(chunk.WorldPosition, chunkRenderer);
             chunkRenderer.InitChunk(chunk);
-
             chunkRenderer.UpdateChunk(meshData);
         }
     }
 
     public bool TryGetChunkData(Vector3Int chunkPosition, out ChunkData chunk)
-    {
+    {  
         if (_chunks.ContainsKey(chunkPosition))
         {
             chunk = _chunks[chunkPosition];
@@ -57,5 +59,48 @@ public class World : MonoBehaviour
 
         chunk = null;
         return false;
+    }
+
+    public bool TryGetChunkRenderer(Vector3Int chunkPosition, out ChunkRenderer chunk)
+    {  
+        if (_chunkRenderers.ContainsKey(chunkPosition))
+        {
+            chunk = _chunkRenderers[chunkPosition];
+            return true;
+        }
+
+        chunk = null;
+        return false;
+    }
+
+    public void UpdateLoadChunks(Vector3 playerPosition)
+    {
+        var centerPosition = Chunk.GetChunkPositionFromWorldBlockPosition(Vector3Int.RoundToInt(playerPosition));
+        _generateWorld(centerPosition);
+    }
+
+    public void ModifyBlock(Vector3Int blockWorldPosition, BlockType blockType)
+    {
+        var chunkPos = Chunk.GetChunkPositionFromWorldBlockPosition(blockWorldPosition);
+
+        if (TryGetChunkData(chunkPos, out ChunkData chunk) && TryGetChunkRenderer(chunkPos, out ChunkRenderer chunkRenderer))
+        {
+            var blockLocalPosition = Chunk.GetLocalBlockPosition(chunk, blockWorldPosition);
+
+            Chunk.SetBlock(chunk, blockLocalPosition, blockType);
+            chunk.IsModifiedByPlayer = true;
+            chunkRenderer.UpdateChunk();
+
+            if (Chunk.IsBlockOnChunkEdge(blockLocalPosition))
+            {
+                var neighbours = Chunk.GetNeighbouringChunkPositions(chunk, blockLocalPosition);
+
+                foreach (var neighbour in neighbours) 
+                {
+                    if (_chunkRenderers.ContainsKey(neighbour))
+                        _chunkRenderers[neighbour].UpdateChunk();
+                }
+            }
+        }
     }
 }

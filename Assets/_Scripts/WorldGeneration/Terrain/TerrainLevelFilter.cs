@@ -52,7 +52,7 @@ public class AirTerrainLevelFilter : ITerrainLevelFilter
 {
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
-        return parameters.BlockPosition.y > parameters.GroundLevel && parameters.BlockPosition.y > World.SeaLevel;
+        return parameters.BlockPosition.y > parameters.GroundLevel && parameters.BlockPosition.y > WorldData.SeaLevel;
     }
 }
 
@@ -60,7 +60,7 @@ public class SeaTerrainLevelFilter : ITerrainLevelFilter
 {
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
-        return parameters.BlockPosition.y > parameters.GroundLevel && parameters.BlockPosition.y <= World.SeaLevel;
+        return parameters.BlockPosition.y > parameters.GroundLevel && parameters.BlockPosition.y <= WorldData.SeaLevel;
     }
 }
 
@@ -68,7 +68,7 @@ public class SurfaceTerrainLevelFilter : ITerrainLevelFilter
 {
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
-        return parameters.BlockPosition.y == parameters.GroundLevel && parameters.BlockPosition.y > World.SeaLevel;
+        return parameters.BlockPosition.y == parameters.GroundLevel && parameters.BlockPosition.y > WorldData.SeaLevel;
     }
 }
 
@@ -76,7 +76,7 @@ public class SeaSurfaceTerrainLevelFilter : ITerrainLevelFilter
 {
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
-        return parameters.BlockPosition.y == parameters.GroundLevel && parameters.BlockPosition.y <= World.SeaLevel;
+        return parameters.BlockPosition.y == parameters.GroundLevel && parameters.BlockPosition.y <= WorldData.SeaLevel;
     }
 }
 
@@ -102,6 +102,6 @@ public class StonePatchesTerrainLevelFilter : ITerrainLevelFilter
 
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
-        return parameters.BlockPosition.y <= parameters.GroundLevel && parameters.BlockPosition.y > World.SeaLevel && parameters.StonePatchesProbability > _stonePatchesThreshold;
+        return parameters.BlockPosition.y <= parameters.GroundLevel && parameters.BlockPosition.y > WorldData.SeaLevel && parameters.StonePatchesProbability > _stonePatchesThreshold;
     }
 }
