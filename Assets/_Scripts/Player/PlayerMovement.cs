@@ -55,7 +55,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void _move(Vector3 directionVector, bool isRunning)
     {
-        var speed = isRunning ? _runningSpeed : _movementSpeed;
+        var speed = _isFlightEnabled ? _flightSpeed : isRunning ? _runningSpeed : _movementSpeed;
+
         _characterController.Move(directionVector * (speed * Time.deltaTime));
     }
 

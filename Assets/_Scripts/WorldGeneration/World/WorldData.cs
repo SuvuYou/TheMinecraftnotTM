@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class WorldData
 {
-    private static readonly int RenderDistance = 6;
+    private static readonly int RenderDistance = 12;
     public static readonly int SeaLevel = 6;
     public static readonly int ChunkSize = 16;
     public static readonly int ChunkHeight = 100;

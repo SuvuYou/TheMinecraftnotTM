@@ -31,15 +31,10 @@ public class ChunkRenderer : MonoBehaviour
     {
         _chunkData = chunkData;
     }
-
+    
     public void UpdateChunk()
     {
         _renderMesh(Chunk.GetChunkMeshData(_chunkData));
-    }
-
-    public void UpdateChunk(MeshData meshData)
-    {
-        _renderMesh(meshData);
     }
 
     private void _renderMesh(MeshData meshData)
