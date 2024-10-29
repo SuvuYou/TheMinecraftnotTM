@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e6f0b514406dd7942af03f09aca53a97, type: 3}
-  m_Name: DomainBiomeOverrideNoiseSettingsX
+  m_Name: TreeBiomeNoiseSettingsY
   m_EditorClassIdentifier: 
   NoiseZoom: 0.01
-  Octaves: 1
-  Offest: {x: 832, y: 3460}
-  Persistance: 1
+  Octaves: 3
+  Offest: {x: 12, y: 998}
+  Persistance: 0.5
   RedistributionModifier: 1.2
   Exponent: 5
