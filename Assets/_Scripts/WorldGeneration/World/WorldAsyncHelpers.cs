@@ -34,6 +34,7 @@ public class WorldAsyncHelpers
 
                     var chunk = new ChunkData(WorldData.ChunkSize, WorldData.ChunkHeight, chunkPosition, _worldReference);
                     _terrainGenerator.GenerateVoxels(chunk);
+                    
                     data.TryAdd(chunkPosition, chunk);
                 }
 

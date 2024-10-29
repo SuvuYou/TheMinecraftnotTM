@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 public enum TerrainLevel
@@ -8,7 +9,8 @@ public enum TerrainLevel
     SeaSurface,
     MiddleGround,
     Ground,
-    StonePatches
+    StonePatches,
+    Trees
 }
 
 public static class TerrainLevelExtention
@@ -24,6 +26,7 @@ public static class TerrainLevelExtention
             TerrainLevel.MiddleGround => new MiddleGroundTerrainLevelFilter(),
             TerrainLevel.Ground => new GroundTerrainLevelFilter(),
             TerrainLevel.StonePatches => new StonePatchesTerrainLevelFilter(),
+            TerrainLevel.Trees => new TreesTerrainLevelFilter(),
             _ => null
         };
     }    
@@ -34,9 +37,11 @@ public struct BlockGenerationParameters
     public Vector3Int BlockPosition;
     public int GroundLevel;
     public float StonePatchesProbability;
+    public ChunkData Chunk;
 
-    public BlockGenerationParameters(Vector3Int blockPosition, int groundLevel, float stonePatchesProbability = 0f)
+    public BlockGenerationParameters(ChunkData chunk, Vector3Int blockPosition, int groundLevel, float stonePatchesProbability = 0f)
     {
+        Chunk = chunk;
         BlockPosition = blockPosition;
         GroundLevel = groundLevel;
         StonePatchesProbability = stonePatchesProbability;
@@ -93,6 +98,38 @@ public class GroundTerrainLevelFilter : ITerrainLevelFilter
     public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
     {
         return parameters.BlockPosition.y < parameters.GroundLevel;
+    }
+}
+
+public class TreesTerrainLevelFilter : ITerrainLevelFilter
+{
+    private int _treeHeight = 5;
+
+    public bool IsBlockInTerrainLevel(BlockGenerationParameters parameters)
+    {
+        var globalBlockPosition = Chunk.GetWorldBlockPosition(parameters.Chunk, parameters.BlockPosition);
+
+        if (!parameters.Chunk.Trees.TreePositions.Contains(new Vector2Int(globalBlockPosition.x, globalBlockPosition.z))) 
+            return false;
+
+        if (parameters.BlockPosition.y <= WorldData.SeaLevel) 
+            return false;  
+
+        if (parameters.BlockPosition.y <= parameters.GroundLevel || parameters.BlockPosition.y > parameters.GroundLevel + _treeHeight) 
+            return false;  
+
+        var groundBlock = Chunk.GetBlock(parameters.Chunk, new Vector3Int(parameters.BlockPosition.x, parameters.GroundLevel, parameters.BlockPosition.z));
+
+        if (groundBlock != BlockType.Grass_Dirt) 
+            return false;
+
+        // TODO: this is just meehhh
+        if (parameters.BlockPosition.y == parameters.GroundLevel + _treeHeight)
+        {
+            parameters.Chunk.Trees.LeefPositions = parameters.Chunk.Trees.LeefPositions.Concat(TreesNoise.GetTreeLeeves(parameters.BlockPosition)).ToList();
+        }
+
+        return true;
     }
 }
 

@@ -81,7 +81,7 @@ MonoBehaviour:
   _playerInput: {fileID: 1946835004406322797}
   _movementSpeed: 10
   _runningSpeed: 15
-  _flightSpeed: 15
+  _flightSpeed: 50
   _jumpHeight: 8
   _groundMask:
     serializedVersion: 2

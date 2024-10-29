@@ -1,23 +1,19 @@
 using UnityEngine;
 
-public class DomainWarping : MonoBehaviour
+public static class DomainWarping
 {
-    [SerializeField] private NoiseSettings _offsetSettingsX, _offsetSettingsY;
-    [SerializeField] private float _amplitudeX, _amplitudeY;
-
-    public float GetNoiseValue(float x, float z, NoiseSettings noiseSettings, Vector2Int worldSeedOffset)
+    public static float GetNoiseValue(float x, float z, DomainWarpingSettings domainWarpingSettings, NoiseSettings noiseSettings, Vector2Int worldSeedOffset)
     {
-        var domainOffset = GetDomainOffset(x, z, worldSeedOffset);
+        var domainOffset = GetDomainOffset(x, z, domainWarpingSettings, worldSeedOffset);
 
         return CustomNoise.OctavePerlin(x + domainOffset.x, z + domainOffset.y, noiseSettings, worldSeedOffset);
     }
 
-    private Vector2 GetDomainOffset(float x, float z, Vector2Int worldSeedOffset)
+    public static Vector2 GetDomainOffset(float x, float z, DomainWarpingSettings domainWarpingSettings, Vector2Int worldSeedOffset)
     {
-        float xOffset = CustomNoise.OctavePerlin(x, z, _offsetSettingsX, worldSeedOffset) * _amplitudeX;
-        float yOffset = CustomNoise.OctavePerlin(x, z, _offsetSettingsY, worldSeedOffset) * _amplitudeY;
+        float xOffset = CustomNoise.OctavePerlin(x, z, domainWarpingSettings.OffsetSettingsX, worldSeedOffset) * domainWarpingSettings.AmplitudeX;
+        float yOffset = CustomNoise.OctavePerlin(x, z, domainWarpingSettings.OffsetSettingsY, worldSeedOffset) * domainWarpingSettings.AmplitudeY;
 
         return new Vector2(xOffset, yOffset);
     }
-
 }

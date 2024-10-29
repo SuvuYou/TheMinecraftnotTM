@@ -6,13 +6,24 @@ public static class Chunk
 {
     public static void SetBlock(ChunkData chunk, Vector3Int position, BlockType block)
     {
-        if (!IsInRange(position.x, chunk.ChunkSize) || !IsInRange(position.z, chunk.ChunkSize) || !IsInRange(position.y, chunk.ChunkHeight))
+        if (IsInRange(position.x, chunk.ChunkSize) && IsInRange(position.z, chunk.ChunkSize) && IsInRange(position.y, chunk.ChunkHeight))
         {
+            int index = GetIndexFromBlockPosition(position: position, width: chunk.ChunkSize, length: chunk.ChunkSize);
+            chunk.Blocks[index] = block;
+
             return;
         }
 
-        int index = GetIndexFromBlockPosition(position: position, width: chunk.ChunkSize, length: chunk.ChunkSize);
-        chunk.Blocks[index] = block;
+        var worldBlockPosition = GetWorldBlockPosition(chunk, blockPositionInChunk: position);
+        var neighbourChunkPosition = GetChunkPositionFromWorldBlockPosition(worldBlockPosition);
+
+        if (chunk.WorldReference.TryGetChunkData(neighbourChunkPosition, out ChunkData neighbourChunk))
+        {
+            var localBlockPosition = GetLocalBlockPosition(neighbourChunk, worldBlockPosition);
+            int index = GetIndexFromBlockPosition(position: localBlockPosition, width: neighbourChunk.ChunkSize, length: neighbourChunk.ChunkSize);
+            
+            neighbourChunk.Blocks[index] = block;
+        }
     }
 
     public static BlockType GetBlock(ChunkData chunk, Vector3Int position)
@@ -24,7 +35,7 @@ public static class Chunk
             return chunk.Blocks[index];
         }
 
-        var worldBlockPosition = GetWorldBlockPosition(chunk, chunkPosition: position);
+        var worldBlockPosition = GetWorldBlockPosition(chunk, blockPositionInChunk: position);
         var neighbourChunkPosition = GetChunkPositionFromWorldBlockPosition(worldBlockPosition);
 
         if (chunk.WorldReference.TryGetChunkData(neighbourChunkPosition, out ChunkData neighbourChunk))
@@ -78,23 +89,23 @@ public static class Chunk
         return meshData;
     }
 
-    public static Vector3Int GetWorldBlockPosition(ChunkData chunk, Vector3Int chunkPosition)
+    public static Vector3Int GetWorldBlockPosition(ChunkData chunk, Vector3Int blockPositionInChunk)
     {
         return new Vector3Int()
         {
-            x = chunkPosition.x + chunk.WorldPosition.x, 
-            y = chunkPosition.y + chunk.WorldPosition.y, 
-            z = chunkPosition.z + chunk.WorldPosition.z   
+            x = blockPositionInChunk.x + chunk.WorldPosition.x, 
+            y = blockPositionInChunk.y + chunk.WorldPosition.y, 
+            z = blockPositionInChunk.z + chunk.WorldPosition.z   
         };
     }
 
-    public static Vector3Int GetLocalBlockPosition(ChunkData chunk, Vector3Int worldPosition)
+    public static Vector3Int GetLocalBlockPosition(ChunkData chunk, Vector3Int worldBlockPosition)
     {
         return new Vector3Int()
         {
-            x = worldPosition.x - chunk.WorldPosition.x, 
-            y = worldPosition.y - chunk.WorldPosition.y, 
-            z = worldPosition.z - chunk.WorldPosition.z   
+            x = worldBlockPosition.x - chunk.WorldPosition.x, 
+            y = worldBlockPosition.y - chunk.WorldPosition.y, 
+            z = worldBlockPosition.z - chunk.WorldPosition.z   
         };
     }
 
@@ -123,6 +134,16 @@ public static class Chunk
             x = Mathf.FloorToInt(worldBlockPosition.x / (float)WorldData.ChunkSize) * WorldData.ChunkSize,
             y = Mathf.FloorToInt(worldBlockPosition.y / (float)WorldData.ChunkHeight) * WorldData.ChunkHeight,
             z = Mathf.FloorToInt(worldBlockPosition.z / (float)WorldData.ChunkSize) * WorldData.ChunkSize
+        };
+    }
+
+    public static Vector3Int GetWorldPositionFromChunkPosition(Vector3Int chunkPosition)
+    {
+        return new ()
+        {
+            x = chunkPosition.x * WorldData.ChunkSize,
+            y = chunkPosition.y * WorldData.ChunkHeight,
+            z = chunkPosition.z * WorldData.ChunkSize 
         };
     }
 

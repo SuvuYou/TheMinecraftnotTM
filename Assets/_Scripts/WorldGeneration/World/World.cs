@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Linq;
 
 public class World : MonoBehaviour
 {
@@ -48,6 +49,8 @@ public class World : MonoBehaviour
             }
         }
 
+        _terrainGenerator.GenerateBiomesTemperatures(centerPosition);
+
         ConcurrentDictionary<Vector3Int, ChunkData> concurrentChunksData;
         ConcurrentDictionary<Vector3Int, MeshData> concurrentChunkMeshes;
 
@@ -66,6 +69,14 @@ public class World : MonoBehaviour
             _chunks.Add(chunkPosition, concurrentChunksData[chunkPosition]);
         }
 
+        foreach(var chunkPosition in _chunks.Keys)
+        {
+            foreach(var leefPosition in _chunks[chunkPosition].Trees.LeefPositions)
+            {
+                Chunk.SetBlock(_chunks[chunkPosition], leefPosition, BlockType.TreeLeafsSolid);
+            }
+        }
+
         try
         {
             concurrentChunkMeshes = await _worldAsyncHelper.GenerateChunkMeshesAsync(chunksGenerationData.ChunkRendererPositionsToGenerate, _chunks);
@@ -76,14 +87,15 @@ public class World : MonoBehaviour
             return;
         }
 
-        StartCoroutine(_renderChunksCoroutine(concurrentChunkMeshes, shouldTriggerOnWorldGeneratedEvent));
+        StartCoroutine(_renderChunksCoroutine(concurrentChunkMeshes, referencePosition: centerPosition, shouldTriggerOnWorldGeneratedEvent: shouldTriggerOnWorldGeneratedEvent));
     }
 
-    private IEnumerator _renderChunksCoroutine(ConcurrentDictionary<Vector3Int, MeshData> chunkMeshes, bool shouldTriggerOnWorldGeneratedEvent = false)
+    private IEnumerator _renderChunksCoroutine(ConcurrentDictionary<Vector3Int, MeshData> chunkMeshes, Vector3Int referencePosition, bool shouldTriggerOnWorldGeneratedEvent = false)
     {
-        foreach(var chunkMesh in chunkMeshes.Keys)
+        foreach(var chunkMesh in chunkMeshes.Keys.ToList().OrderBy(pos => Vector3Int.Distance(referencePosition, pos)))
         {
             var chunk = _chunks[chunkMesh];
+
             if (_chunkRenderers.ContainsKey(chunk.WorldPosition))
             {
                 continue;
